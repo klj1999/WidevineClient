@@ -2,6 +2,7 @@
 using Org.BouncyCastle.Crypto.Digests;
 using Org.BouncyCastle.Crypto.Encodings;
 using Org.BouncyCastle.Crypto.Engines;
+using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Crypto.Signers;
 using Org.BouncyCastle.OpenSsl;
 using ProtoBuf;
@@ -41,13 +42,33 @@ namespace WidevineClient.Widevine
 
             if (privateKeyBytes != null)
             {
-                using var reader = new StringReader(Encoding.UTF8.GetString(privateKeyBytes));
-                DeviceKeys = (AsymmetricCipherKeyPair)new PemReader(reader).ReadObject();
+                try
+                {
+                    using var reader = new StringReader(Encoding.UTF8.GetString(privateKeyBytes));
+                    DeviceKeys = (AsymmetricCipherKeyPair)new PemReader(reader).ReadObject();
+                }
+                catch (Exception)
+                {
+                    using var reader = new StringReader(Encoding.UTF8.GetString(privateKeyBytes));
+                    var rsaPrivatekey = (RsaPrivateCrtKeyParameters)new PemReader(reader).ReadObject();
+                    RsaKeyParameters rsaPublicKey = new RsaKeyParameters(false, rsaPrivatekey.Modulus, rsaPrivatekey.PublicExponent);
+                    DeviceKeys = new AsymmetricCipherKeyPair(rsaPublicKey, rsaPrivatekey);
+                }
             }
             else if (File.Exists(privateKeyPath))
             {
-                using var reader = File.OpenText(privateKeyPath);
-                DeviceKeys = (AsymmetricCipherKeyPair)new PemReader(reader).ReadObject();
+                try
+                {
+                    using var reader = File.OpenText(privateKeyPath);
+                    DeviceKeys = (AsymmetricCipherKeyPair)new PemReader(reader).ReadObject();
+                }
+                catch (Exception)
+                {
+                    using var reader = File.OpenText(privateKeyPath);
+                    var rsaPrivatekey = (RsaPrivateCrtKeyParameters)new PemReader(reader).ReadObject();
+                    RsaKeyParameters rsaPublicKey = new RsaKeyParameters(false, rsaPrivatekey.Modulus, rsaPrivatekey.PublicExponent);
+                    DeviceKeys = new AsymmetricCipherKeyPair(rsaPublicKey, rsaPrivatekey);
+                }
             }
 
             if (vmpBytes != null)
