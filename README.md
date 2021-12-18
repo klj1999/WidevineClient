@@ -1,8 +1,6 @@
 # WidevineClient
 
-The code was stolen from other people.
-
-Anyway, it works. ^_^
+代码是从一个恶意软件(amazondl-1.0.1-win-x64.zip)中提取的，贡献给大家。
 
 ---
 
